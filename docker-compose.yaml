@@ -1,0 +1,63 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laradoc
+    container_name: app-laradoc
+    restart: unless-stopped
+    tty: true
+    environment:
+      - SERVICE_NAME=app
+    working_dir: /var/www/laradoc
+    volumes:
+      - .:/var/www/laradoc
+      - ./storage/php.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - laradoc_network
+
+  webserver:
+    image: nginx:alpine
+    container_name: nginx-laradoc
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/laradoc
+      - ./storage/:/etc/nginx/conf.d/
+    depends_on:
+      - app
+    networks:
+      - laradoc_network
+
+  db:
+    image: mysql
+    container_name: mysql-laradoc
+    restart: always
+    tty: true
+    ports:
+      - 3308:3306
+    volumes:
+      - laradoc_volume:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=bimaarya123
+      - MYSQL_PASSWORD=bimaarya123
+      - MYSQL_USER=dry7717
+      - MYSQL_DATABASE=db_laradoc
+    networks:
+      - laradoc_network
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: pma-laradoc
+    restart: always
+    ports:
+      - 2025:80
+    networks:
+      - laradoc_network
+
+networks:
+  laradoc_network:
+    driver: bridge
+volumes:
+  laradoc_volume:
