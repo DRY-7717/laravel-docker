@@ -8,13 +8,19 @@ services:
     restart: unless-stopped
     tty: true
     environment:
-      - SERVICE_NAME=app
+      - DB_HOST=db
+      - DB_PORT=db:3308
+      - DB_DATABASE=db_test_laradoc
+      - DB_USERNAME=dry7717
+      - DB_PASSWORD=bimaarya123
     working_dir: /var/www/laradoc
     volumes:
       - .:/var/www/laradoc
       - ./storage/php.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
-      - laradoc_network
+      - mariadb_network
+    depends_on:
+      - db
 
   webserver:
     image: nginx:alpine
@@ -25,39 +31,43 @@ services:
     volumes:
       - .:/var/www/laradoc
       - ./storage/:/etc/nginx/conf.d/
+    networks:
+      - mariadb_network
     depends_on:
       - app
-    networks:
-      - laradoc_network
 
   db:
-    image: mysql
-    container_name: mysql-laradoc
-    restart: always
-    tty: true
-    ports:
-      - 3308:3306
-    volumes:
-      - laradoc_volume:/var/lib/mysql
+    image: mariadb
+    container_name: mariadb_laradoc
     environment:
       - MYSQL_ROOT_PASSWORD=bimaarya123
-      - MYSQL_PASSWORD=bimaarya123
       - MYSQL_USER=dry7717
-      - MYSQL_DATABASE=db_laradoc
+      - MYSQL_PASSWORD=bimaarya123
+      - MYSQL_DATABASE=db_test_laradoc
+    ports:
+      - "3308:3306"
+    volumes:
+      - mariadb_volume:/var/lib/mysql
     networks:
-      - laradoc_network
+      - mariadb_network
 
   phpmyadmin:
     image: phpmyadmin
-    container_name: pma-laradoc
+    container_name: pma_laradoc
     restart: always
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=dry7717
+      - PMA_PASSWORD=bimaarya123
+      - PMA_PORT=db:3308
     ports:
-      - 2025:80
+      - 8888:80
     networks:
-      - laradoc_network
+      - mariadb_network
+
+volumes:
+  mariadb_volume:
 
 networks:
-  laradoc_network:
+  mariadb_network:
     driver: bridge
-volumes:
-  laradoc_volume:
